@@ -1,0 +1,9 @@
+This plugin provides a simple way of enabling JA-SIG CAS client integration.
+
+Current release version is 2.0 but if the new serializable feature is not needed, it is possible to continue using 1.0 which comes with a standard CAS client jar.
+
+It uses CAS (Yale) Java Client which is a less complicated client library with fewer dependencies compared to another Java client called CAS Client for Java. Although the latter is developed with Spring Framework in mind, I think in many use cases the Yale version is easier to get integrated.
+
+On the other hand, if a more integrated security solution is needed with support for CAS, the Spring Security plugin for Grails is probably more suitable.
+
+In general, this plugin is for applications needing simple and easy authentication against CAS, without complex requirements on authorization as authorization is yet to be added in CAS (at least prior to CAS Server 3.1).

@@ -1,0 +1,6 @@
+* 2.0 release, refactored to use Grails 2 plugin creation and maintenance structure.
+* 1.2 release, refactored mocking from using cas.gsp to CasController which avoids trouble when upgrading between plugin versions; also the jar that comes with this release is modified from official cas-client-2.1.1 with serializable CASReceipt class so that in environments where sessions are to be serialized this plugin would still work.
+* 1.1 release, added a feature 'redirect' which strips out CAS ticket parameter by redirecting again to same url in order to make final url bookmarkable; use with caution as redirecting is always a tricky issue.
+* 1.0 release inline with Grails 1.0, fixed a problem reported here and adding 'cas.mocking' option as previously mentioned in [Todo list|guide:todolist].
+* 0.2 updated release, added support for list as value of 'cas.urlPattern'.
+* 0.1 initial release, developed and tested against Grails 0.6.

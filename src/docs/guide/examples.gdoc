@@ -1,0 +1,44 @@
+
+Simple Solution for Authorization
+
+First of all, as users of JA-SIG CAS may already know, CAS is only for authentication but not for authorization (up to 3.x). Therefore authorization is down to users to implement, if necessary. A common pattern is to use the interceptors available with Grails,
+
+For instance, you can have a controller AccessController like this, with this plugin installed
+
+{code}
+import edu.yale.its.tp.cas.client.filter.CASFilter
+
+class AccessController {
+
+    def beforeInterceptor = [action: this.&check]
+
+    def check() { def username = session?.getAttribute(CASFilter.CAS_FILTER_USER) // check username and return a boolean accordingly. // … }
+}
+{code}
+
+Please note it looks different from the example controller showed in Grails user guide for before interceptors because:
+
+* it is not necessary to use 'except' to exclude a login or register page as some or all the resources in your application are protected by this plugin
+* it is not necessary to have your own session attribute to save current username as the plugin (actually the CAS client library) has done that for you
+
+To take the above example further, a simpler solution is available,
+
+In Config.groovy you can have a list of users allowed to access your application,
+
+{code}
+users = ['foo', 'bar']
+
+and then the 'check' method above will look like,
+
+def check() {
+    def username = session?.getAttribute(CASFilter.CAS_FILTER_USER)?.toLowerCase()
+    return username in grailsApplication.config.users
+}
+{code}
+
+That could be helpful if your application has a simple authorization need.
+
+Handling Large Number of Protected URLs
+
+The plugin can handle a list of urls using 'cas.urlPattern' but it can be quite messy to list every one of them. Thanks to a mailing list post, you can group all the urls to be protected by the plugin using Grails [URL mappings|http://grails.org/URL+mapping] feature and then feed the url pattern after mapping to the plugin.
+
