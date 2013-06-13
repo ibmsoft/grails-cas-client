@@ -1,21 +1,23 @@
+import javax.servlet.http.HttpServletResponse
 
+import edu.yale.its.tp.cas.client.filter.CASFilter
 
 class CasController {
 
 	def index = {
-		if (org.codehaus.groovy.grails.commons.ConfigurationHolder.config.cas.mocking) {
-			def model = [:]
-			if (params.u) {
-				session?.setAttribute(edu.yale.its.tp.cas.client.filter.CASFilter.CAS_FILTER_USER, params.u)
-				model = [message: "Current cas-ified user is [${params.u}].", result: true]
-			}
-			else {
-				model = [message: "Please supply a parameter 'u'!", result: false]
-			}
-			model
+		if (!grailsApplication.config.cas.mocking) {
+			response.sendError(HttpServletResponse.SC_NOT_FOUND)
+			return
+		}
+
+		def model
+		if (params.u) {
+			session?.setAttribute(CASFilter.CAS_FILTER_USER, params.u)
+			model = [message: "Current cas-ified user is [${params.u}].", result: true]
 		}
 		else {
-			response.sendError(javax.servlet.http.HttpServletResponse.SC_NOT_FOUND)
+			model = [message: "Please supply a parameter 'u'!", result: false]
 		}
+		model
 	}
 }

@@ -1,15 +1,11 @@
 import grails.util.GrailsUtil
-import org.codehaus.groovy.grails.commons.ConfigurationHolder
 
 class GrailsCasClientGrailsPlugin {
 
     def version = "2.0"
     def grailsVersion = "1.0 > *"
-    def pluginExcludes = [
-        "grails-app/views/error.gsp"
-    ]
 
-    def title = "Grails CAS Client Plugin" // Headline display name of the plugin
+    def title = "Grails CAS Client Plugin"
     def author = "Chen Wang"
     def authorEmail = "dev@chenwang.org"
     def description = '''\
@@ -29,167 +25,142 @@ Please make sure necessary configurations are made in your Grails application's 
     def scm = [ url: "https://github.com/cwang/grails-cas-client.git" ]
 
     def doWithWebDescriptor = { xml ->
-		log.info('====== started adding JA-SIG CAS client support')
 
-        if (ConfigurationHolder.config.cas.disabled) {
+        log.info('====== started adding JA-SIG CAS client support')
+
+        def config = application.config.cas
+
+        if (config.disabled) {
             log.info('the plugin is disabled therefore nothing needs to be done here.')
+            return
+        }
+
+        boolean failed = false
+
+        // to check configurations for filter and its mapping.
+        if (config.loginUrl instanceof ConfigObject
+                || config.validateUrl instanceof ConfigObject
+                || config.urlPattern instanceof ConfigObject) {
+            log.error('Please make sure that required parameters [cas.loginUrl, cas.validateUrl, cas.urlPattern] are set up correctly in Config.groovy of your application!')
+//            System.exit(1)
+            failed = true
+        }
+        else if (config.serverName instanceof ConfigObject && config.serviceUrl instanceof ConfigObject) {
+            log.error('Please make sure that one of required parameters [cas.serverName, cas.serviceUrl] is set up correctly in Config.groovy of your application!')
+//            System.exit(1)
+            failed = true
         }
         else {
+            log.info('checked configurations in Config.groovy')
 
-            def failed = false
+            // to define name of the filter.
+            String fname = 'CAS-Filter'
 
-            // to check configurations for filter and its mapping.
-            if (ConfigurationHolder.config.cas.loginUrl instanceof ConfigObject
-                    || ConfigurationHolder.config.cas.validateUrl instanceof ConfigObject
-                    || ConfigurationHolder.config.cas.urlPattern instanceof ConfigObject) {
-                log.error('Please make sure that required parameters [cas.loginUrl, cas.validateUrl, cas.urlPattern] are set up correctly in Config.groovy of your application!')
-//			 	System.exit(1)
-                failed = true
-            }
-            else if (ConfigurationHolder.config.cas.serverName instanceof ConfigObject && ConfigurationHolder.config.cas.serviceUrl instanceof ConfigObject) {
-                log.error('Please make sure that one of required parameters [cas.serverName, cas.serviceUrl] is set up correctly in Config.groovy of your application!')
-//			    System.exit(1)
-                failed = true
-            }
-            else {
-			    log.info('checked configurations in Config.groovy')
+            // to add cas filter.
+            def filters = xml.'filter'
 
-                // to define name of the filter.
-                def fname = 'CAS-Filter'
+            filters[0] + {
+                'filter' {
+                    'filter-name' (fname)
+                    'filter-class' ('edu.yale.its.tp.cas.client.filter.CASFilter')
+                    'init-param' {
+                        'param-name' ('edu.yale.its.tp.cas.client.filter.loginUrl')
+                        'param-value' (config.loginUrl)
+                    }
+                    'init-param' {
+                        'param-name' ('edu.yale.its.tp.cas.client.filter.validateUrl')
+                        'param-value' (config.validateUrl)
+                    }
 
-                // to add cas filter.
-                def filters = xml.'filter'
-
-                filters[0] + {
-                    'filter' {
-                        'filter-name' (fname)
-                        'filter-class' ('edu.yale.its.tp.cas.client.filter.CASFilter')
+                    if (config.serverName instanceof CharSequence) {
                         'init-param' {
-                            'param-name' ('edu.yale.its.tp.cas.client.filter.loginUrl')
-                            'param-value' ("${ConfigurationHolder.config.cas.loginUrl}")
+                            'param-name' ('edu.yale.its.tp.cas.client.filter.serverName')
+                            'param-value' (config.serverName)
                         }
+                    }
+                    else if (config.serviceUrl instanceof CharSequence) {
                         'init-param' {
-                            'param-name' ('edu.yale.its.tp.cas.client.filter.validateUrl')
-                            'param-value' ("${ConfigurationHolder.config.cas.validateUrl}")
+                            'param-name' ('edu.yale.its.tp.cas.client.filter.serviceUrl')
+                            'param-value' (config.serviceUrl)
                         }
+                    }
 
-                        if (ConfigurationHolder.config.cas.serverName instanceof String) {
-                            'init-param' {
-                                'param-name' ('edu.yale.its.tp.cas.client.filter.serverName')
-                                'param-value' ("${ConfigurationHolder.config.cas.serverName}")
-                            }
+                    if (config.proxyCallbackUrl instanceof CharSequence) {
+                        'init-param' {
+                            'param-name' ('edu.yale.its.tp.cas.client.filter.proxyCallbackUrl')
+                            'param-value' (config.proxyCallbackUrl)
                         }
-                        else if (ConfigurationHolder.config.cas.serviceUrl instanceof String) {
-                            'init-param' {
-                                'param-name' ('edu.yale.its.tp.cas.client.filter.serviceUrl')
-                                'param-value' ("${ConfigurationHolder.config.cas.serviceUrl}")
-                            }
+                    }
+                    if (config.authorizedProxy instanceof CharSequence) {
+                        'init-param' {
+                            'param-name' ('edu.yale.its.tp.cas.client.filter.authorizedProxy')
+                            'param-value' (config.authorizedProxy)
                         }
-
-                        if (ConfigurationHolder.config.cas.proxyCallbackUrl instanceof String) {
-                            'init-param' {
-                                'param-name' ('edu.yale.its.tp.cas.client.filter.proxyCallbackUrl')
-                                'param-value' ("${ConfigurationHolder.config.cas.proxyCallbackUrl}")
-                            }
+                    }
+                    if (config.renew instanceof Boolean) {
+                        'init-param' {
+                            'param-name' ('edu.yale.its.tp.cas.client.filter.renew')
+                            'param-value' (config.renew)
                         }
-                        if (ConfigurationHolder.config.cas.authorizedProxy instanceof String) {
-                            'init-param' {
-                                'param-name' ('edu.yale.its.tp.cas.client.filter.authorizedProxy')
-                                'param-value' ("${ConfigurationHolder.config.cas.authorizedProxy}")
-                            }
+                    }
+                    if (config.redirect instanceof Boolean) {
+                        'init-param' {
+                            'param-name' ('edu.yale.its.tp.cas.client.filter.redirect')
+                            'param-value' (config.redirect)
                         }
-                        if (ConfigurationHolder.config.cas.renew instanceof Boolean) {
-                            'init-param' {
-                                'param-name' ('edu.yale.its.tp.cas.client.filter.renew')
-                                'param-value' ("${ConfigurationHolder.config.cas.renew}")
-                            }
-                        }
-                        if (ConfigurationHolder.config.cas.redirect instanceof Boolean) {
-                            'init-param' {
-                                'param-name' ('edu.yale.its.tp.cas.client.filter.redirect')
-                                'param-value' ("${ConfigurationHolder.config.cas.redirect}")
-                            }
-                        }
-                        if (ConfigurationHolder.config.cas.wrapRequest instanceof Boolean) {
-                            'init-param' {
-                                'param-name' ('edu.yale.its.tp.cas.client.filter.wrapRequest')
-                                'param-value' ("${ConfigurationHolder.config.cas.wrapRequest}")
-                            }
+                    }
+                    if (config.wrapRequest instanceof Boolean) {
+                        'init-param' {
+                            'param-name' ('edu.yale.its.tp.cas.client.filter.wrapRequest')
+                            'param-value' (config.wrapRequest)
                         }
                     }
                 }
+            }
 
-                log.info('added <filter/> section in web.xml')
+            log.info('added <filter/> section in web.xml')
 
+            // to add cas filter mapping.
+            def filtermappings = xml.'filter-mapping'
 
-                // to add cas filter mapping.
-                def filtermappings = xml.'filter-mapping'
+            if (config.urlPattern instanceof CharSequence) {
 
+                filtermappings[0] + {
+                    'filter-mapping' {
+                        'filter-name' (fname)
+                        'url-pattern' (config.urlPattern)
+                    }
+                }
+                log.info('added <filter-mapping/> section(s) in web.xml')
+            }
+            else if (config.urlPattern instanceof List) {
 
-                if (ConfigurationHolder.config.cas.urlPattern instanceof String) {
-
+                config.urlPattern.each { u ->
                     filtermappings[0] + {
                         'filter-mapping' {
                             'filter-name' (fname)
-                            'url-pattern' ("${ConfigurationHolder.config.cas.urlPattern}")
+                            'url-pattern' ("${u}")
                         }
                     }
-                    log.info('added <filter-mapping/> section(s) in web.xml')
                 }
-                else if (ConfigurationHolder.config.cas.urlPattern instanceof java.util.List) {
-
-                    ConfigurationHolder.config.cas.urlPattern.each { u ->
-                        filtermappings[0] + {
-                            'filter-mapping' {
-                                'filter-name' (fname)
-                                'url-pattern' ("${u}")
-                            }
-                        }
-                    }
-                    log.info('added <filter-mapping/> section(s) in web.xml')
-                }
-                else {
-                    log.error('Please make sure that required parameter [cas.urlPattern] is an instance of either java.lang.String or java.util.List in Config.groovy of your application!')
-//			 		System.exit(1)
-                    failed = true
-                }
-
+                log.info('added <filter-mapping/> section(s) in web.xml')
             }
-
-            if (failed) {
-                log.error("PLEASE CORRECT THE ERROR ABOVE!")
+            else {
+                log.error('Please make sure that required parameter [cas.urlPattern] is an instance of either java.lang.String or java.util.List in Config.groovy of your application!')
+//                     System.exit(1)
+                failed = true
             }
-
         }
 
-        if (ConfigurationHolder.config.cas.mocking) {
+        if (failed) {
+            log.error("PLEASE CORRECT THE ERROR ABOVE!")
+        }
+
+        if (config.mocking) {
             log.info('/cas?u=USERNAME is available for mocking cas-ified user session')
             log.warn('Please take extra care as mocking should NOT be allowed for production environment!')
         }
 
-		log.info('====== finished adding JA-SIG CAS client support')
-    }
-
-    def doWithSpring = {
-        // nothing to do with spring here.
-    }
-
-    def doWithDynamicMethods = { ctx ->
-        // nothing to do with dynamic methods here.
-    }
-
-    def doWithApplicationContext = { applicationContext ->
-        // nothing to do with application context here.
-    }
-
-    def onChange = { event ->
-        // no interests in dynamic loading.
-    }
-
-    def onConfigChange = { event ->
-        // no interests in dynamic loading.
-    }
-
-    def onShutdown = { event ->
+        log.info('====== finished adding JA-SIG CAS client support')
     }
 }
