@@ -1,19 +1,7 @@
-As a Grails plugin, it couldn't be easier to install it. 'grails install-plugins' should be able to take care of that from either locally downloaded file or remote plugin repository.
+To install the plugin, add a dependency in the plugins section of BuildConfig.groovy:
 
 {code}
-grails list-plugins
+plugins {
+   compile ':cas-client:2.0'
+}
 {code}
-
-should give you a list of available plugins.
-
-{code}
-grails install-plugin cas-client [current-release-version]
-{code}
-
-should install this plugin from remote repository.
-
-{code}
-grails install-plugin /path/to/local/cas/cliet/plugin.zip
-{code}
-
-will install from a locally downloaded file.
