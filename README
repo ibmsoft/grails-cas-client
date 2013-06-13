@@ -1,1 +1,2 @@
-This file was created by IntelliJ IDEA 12.1.4 for binding GitHub repository
+The plugin handles configurations of JA-SIG CAS client integration using Yale Java client library versioned 2.1.1 with
+some added features.
