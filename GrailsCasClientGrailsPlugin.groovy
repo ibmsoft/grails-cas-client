@@ -21,7 +21,7 @@ grails.cas.casServerLogoutUrl   = 'http://10.67.10.52:8989/sso/logout'
 grails.cas.casServerLoginUrl    = 'http://10.67.10.52:8989/sso/login'
 grails.cas.serverName           = 'http://10.66.30.249:8090'
 grails.cas.casServerUrlPrefix   = 'http://10.67.10.52:8989/sso'
-grails.cas.urlPattern           = '/ssologin'
+grails.cas.urlPattern           = '/ssologin' //this is for the sso login entry
 
 
 '''

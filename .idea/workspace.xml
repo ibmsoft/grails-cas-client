@@ -2,11 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8815c631-06d3-4771-85da-0ce3e4fd3b99" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/lib/cas-client-core-3.2.1.jar" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/grails-app/conf/Config.groovy" afterPath="$PROJECT_DIR$/grails-app/conf/Config.groovy" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/GrailsCasClientGrailsPlugin.groovy" afterPath="$PROJECT_DIR$/GrailsCasClientGrailsPlugin.groovy" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/application.properties" afterPath="$PROJECT_DIR$/application.properties" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/grails-cas-client.iml" afterPath="$PROJECT_DIR$/grails-cas-client.iml" />
     </list>
     <ignored path="grails-cas-client.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -76,7 +72,7 @@
       <file leaf-file-name="GrailsCasClientGrailsPlugin.groovy" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/GrailsCasClientGrailsPlugin.groovy">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="89" column="48" selection-start="3476" selection-end="3476" vertical-scroll-proportion="0.5">
+            <state line="23" column="79" selection-start="1129" selection-end="1129" vertical-scroll-proportion="0.575">
               <folding />
             </state>
           </provider>
@@ -378,7 +374,7 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/GrailsCasClientGrailsPlugin.groovy">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="89" column="48" selection-start="3476" selection-end="3476" vertical-scroll-proportion="0.5">
+        <state line="23" column="79" selection-start="1129" selection-end="1129" vertical-scroll-proportion="0.575">
           <folding />
         </state>
       </provider>
