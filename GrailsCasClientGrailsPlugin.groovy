@@ -14,6 +14,16 @@ some added features. Please note there is another Java client library which is h
 a natural fit for Grails applications, it requires more configuration works to get started.
 
 Please make sure necessary configurations are made in your Grails application's Config.groovy file.
+in config.groovy add following config
+//for jasig-sis cas
+grails.cas.disabled = false
+grails.cas.casServerLogoutUrl   = 'http://10.67.10.52:8989/sso/logout'
+grails.cas.casServerLoginUrl    = 'http://10.67.10.52:8989/sso/login'
+grails.cas.serverName           = 'http://10.66.30.249:8090'
+grails.cas.casServerUrlPrefix   = 'http://10.67.10.52:8989/sso'
+grails.cas.urlPattern           = '/ssologin'
+
+
 '''
 
     def documentation = "http://grails.org/plugin/grails-cas-client"
@@ -24,143 +34,107 @@ Please make sure necessary configurations are made in your Grails application's 
 
     def scm = [ url: "https://github.com/cwang/grails-cas-client.git" ]
 
+
     def doWithWebDescriptor = { xml ->
+//		System.out.println('====== started adding JA-SIG CAS client support')
+        def config = application.config.grails.cas
 
-        log.info('====== started adding JA-SIG CAS client support')
-
-        def config = application.config.cas
-
-        if (config.disabled) {
-            log.info('the plugin is disabled therefore nothing needs to be done here.')
-            return
-        }
-
-        boolean failed = false
-
-        // to check configurations for filter and its mapping.
-        if (config.loginUrl instanceof ConfigObject
-                || config.validateUrl instanceof ConfigObject
-                || config.urlPattern instanceof ConfigObject) {
-            log.error('Please make sure that required parameters [cas.loginUrl, cas.validateUrl, cas.urlPattern] are set up correctly in Config.groovy of your application!')
-//            System.exit(1)
-            failed = true
-        }
-        else if (config.serverName instanceof ConfigObject && config.serviceUrl instanceof ConfigObject) {
-            log.error('Please make sure that one of required parameters [cas.serverName, cas.serviceUrl] is set up correctly in Config.groovy of your application!')
-//            System.exit(1)
-            failed = true
+        if (config.cas.disabled) {
+            System.out.println('CAS CLIENT PLUGIN INFO: the plugin is disabled therefore nothing needs to be done here.')
         }
         else {
-            log.info('checked configurations in Config.groovy')
+            //to add context-param
+            def contextParam = xml.'context-param'
 
-            // to define name of the filter.
-            String fname = 'CAS-Filter'
+            contextParam[0] + {
+                'context-param'{
+                    'param-name'('casServerLogoutUrl')
+                    'param-value'(config.casServerLogoutUrl)
+                }
+            }
+
+            def listenerParam = xml.'listener'
+            listenerParam[0] + {
+                'listener'{
+                    'listener-class'('org.jasig.cas.client.session.SingleSignOutHttpSessionListener')
+                }
+            }
+
 
             // to add cas filter.
             def filters = xml.'filter'
 
             filters[0] + {
                 'filter' {
-                    'filter-name' (fname)
-                    'filter-class' ('edu.yale.its.tp.cas.client.filter.CASFilter')
-                    'init-param' {
-                        'param-name' ('edu.yale.its.tp.cas.client.filter.loginUrl')
-                        'param-value' (config.loginUrl)
+                    'filter-name'('CAS Single Sign Out Filter')
+                    'filter-class'('org.jasig.cas.client.session.SingleSignOutFilter')
+                }
+                'filter' {
+                    'filter-name'('CASFilter')
+                    'filter-class'('org.jasig.cas.client.authentication.AuthenticationFilter')
+                    'init-param'{
+                        'param-name'('casServerLoginUrl')
+                        'param-value'(config.casServerLoginUrl)
                     }
-                    'init-param' {
-                        'param-name' ('edu.yale.its.tp.cas.client.filter.validateUrl')
-                        'param-value' (config.validateUrl)
+                    'init-param'{
+                        'param-name'('serverName')
+                        'param-value'(config.serverName)
                     }
-
-                    if (config.serverName instanceof CharSequence) {
-                        'init-param' {
-                            'param-name' ('edu.yale.its.tp.cas.client.filter.serverName')
-                            'param-value' (config.serverName)
-                        }
+                }
+                'filter' {
+                    'filter-name'('CAS Validation Filter')
+                    'filter-class'('org.jasig.cas.client.validation.Cas20ProxyReceivingTicketValidationFilter')
+                    'init-param'{
+                        'param-name'('casServerUrlPrefix')
+                        'param-value'(config.casServerUrlPrefix)
                     }
-                    else if (config.serviceUrl instanceof CharSequence) {
-                        'init-param' {
-                            'param-name' ('edu.yale.its.tp.cas.client.filter.serviceUrl')
-                            'param-value' (config.serviceUrl)
-                        }
+                    'init-param'{
+                        'param-name'('serverName')
+                        'param-value'(config.serverName)
                     }
-
-                    if (config.proxyCallbackUrl instanceof CharSequence) {
-                        'init-param' {
-                            'param-name' ('edu.yale.its.tp.cas.client.filter.proxyCallbackUrl')
-                            'param-value' (config.proxyCallbackUrl)
-                        }
-                    }
-                    if (config.authorizedProxy instanceof CharSequence) {
-                        'init-param' {
-                            'param-name' ('edu.yale.its.tp.cas.client.filter.authorizedProxy')
-                            'param-value' (config.authorizedProxy)
-                        }
-                    }
-                    if (config.renew instanceof Boolean) {
-                        'init-param' {
-                            'param-name' ('edu.yale.its.tp.cas.client.filter.renew')
-                            'param-value' (config.renew)
-                        }
-                    }
-                    if (config.redirect instanceof Boolean) {
-                        'init-param' {
-                            'param-name' ('edu.yale.its.tp.cas.client.filter.redirect')
-                            'param-value' (config.redirect)
-                        }
-                    }
-                    if (config.wrapRequest instanceof Boolean) {
-                        'init-param' {
-                            'param-name' ('edu.yale.its.tp.cas.client.filter.wrapRequest')
-                            'param-value' (config.wrapRequest)
-                        }
-                    }
+                }
+                'filter' {
+                    'filter-name'('CAS HttpServletRequest Wrapper Filter')
+                    'filter-class'('org.jasig.cas.client.util.HttpServletRequestWrapperFilter')
+                }
+                'filter' {
+                    'filter-name'('CAS Assertion Thread Local Filter')
+                    'filter-class'('org.jasig.cas.client.util.AssertionThreadLocalFilter')
                 }
             }
 
-            log.info('added <filter/> section in web.xml')
+            System.out.println('CAS CLIENT PLUGIN INFO: added <filter/> section in web.xml')
+
 
             // to add cas filter mapping.
             def filtermappings = xml.'filter-mapping'
 
-            if (config.urlPattern instanceof CharSequence) {
-
-                filtermappings[0] + {
-                    'filter-mapping' {
-                        'filter-name' (fname)
-                        'url-pattern' (config.urlPattern)
-                    }
+            filtermappings[0] + {
+                'filter-mapping' {
+                    'filter-name' ('CAS Single Sign Out Filter')
+                    'url-pattern' ('/logout')
                 }
-                log.info('added <filter-mapping/> section(s) in web.xml')
-            }
-            else if (config.urlPattern instanceof List) {
-
-                config.urlPattern.each { u ->
-                    filtermappings[0] + {
-                        'filter-mapping' {
-                            'filter-name' (fname)
-                            'url-pattern' ("${u}")
-                        }
-                    }
+                'filter-mapping' {
+                    'filter-name' ('CASFilter')
+                    'url-pattern' (config.urlPattern)
                 }
-                log.info('added <filter-mapping/> section(s) in web.xml')
+                'filter-mapping' {
+                    'filter-name' ('CAS Validation Filter')
+                    'url-pattern' (config.urlPattern)
+                }
+                'filter-mapping' {
+                    'filter-name' ('CAS HttpServletRequest Wrapper Filter')
+                    'url-pattern' (config.urlPattern)
+                }
+                'filter-mapping' {
+                    'filter-name' ('CAS Assertion Thread Local Filter')
+                    'url-pattern' (config.urlPattern)
+                }
             }
-            else {
-                log.error('Please make sure that required parameter [cas.urlPattern] is an instance of either java.lang.String or java.util.List in Config.groovy of your application!')
-//                     System.exit(1)
-                failed = true
-            }
+            System.out.println('CAS CLIENT PLUGIN INFO: added <filter-mapping/> section(s) in web.xml')
+
+
         }
 
-        if (failed) {
-            log.error("PLEASE CORRECT THE ERROR ABOVE!")
-        }
-
-        if (config.mocking) {
-            log.info('/cas?u=USERNAME is available for mocking cas-ified user session')
-            log.warn('Please take extra care as mocking should NOT be allowed for production environment!')
-        }
-
-        log.info('====== finished adding JA-SIG CAS client support')
     }
 }
